@@ -1,0 +1,25 @@
+# Секрети: у репозиторії лише .env.example
+.env
+.env.*
+!.env.example
+*token*.json
+*credentials*.json
+*service_account*.json
+
+# Кеш відповідей API, сторінок і векторів
+.cache/
+*.sqlite
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Результати запусків (можуть містити дані клієнтів)
+runs/
+report.html
+report.json
+backtest.json
+niche_profile.json

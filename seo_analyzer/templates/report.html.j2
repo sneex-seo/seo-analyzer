@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEO-діагноз · {{ r.meta.domain }}</title>
+<style>
+:root{--bg:#f7f7f5;--card:#fff;--ink:#1d1d1b;--muted:#6b6b66;--line:#e4e3de;--accent:#2f5bd3;
+--sev4:#c62828;--sev3:#e0661b;--sev2:#c49a00;--sev1:#6b8e5a;--ok:#2e7d32;--bad:#c62828;--chip:#efeee9}
+@media (prefers-color-scheme: dark){:root{--bg:#161615;--card:#1f1f1d;--ink:#ecebe6;--muted:#a3a29b;--line:#34332f;
+--accent:#7da2ff;--sev4:#ff6b6b;--sev3:#ff9a52;--sev2:#e3c14d;--sev1:#9cc28a;--ok:#7bc67e;--bad:#ff6b6b;--chip:#2a2a27}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:19px;margin:32px 0 12px}h3{font-size:16px;margin:20px 0 8px}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.muted{color:var(--muted)}.small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted)}
+.badge{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;white-space:nowrap}
+.s4{background:var(--sev4)}.s3{background:var(--sev3)}.s2{background:var(--sev2)}.s1{background:var(--sev1)}
+.chip{display:inline-block;background:var(--chip);border-radius:6px;padding:1px 7px;margin:2px 3px 2px 0;font-size:13px}
+.warn{border-left:4px solid var(--sev3)}
+.finding{border-left:4px solid var(--line)}.finding.s4b{border-left-color:var(--sev4)}.finding.s3b{border-left-color:var(--sev3)}
+.finding.s2b{border-left-color:var(--sev2)}.finding.s1b{border-left-color:var(--sev1)}
+.ftitle{font-weight:600;margin:4px 0}
+.conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.conf.fr{float:right}
+@media (max-width:640px){.conf.fr{float:none;display:flex;margin-top:6px}}
+.bar{width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+ul.rec{margin:6px 0 0;padding-left:20px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;white-space:nowrap}
+tr.me td{background:color-mix(in srgb,var(--accent) 10%,transparent);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.yes{color:var(--ok)}.no{color:var(--bad)}
+details>summary{cursor:pointer;font-weight:600;font-size:17px;padding:4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi b{display:block;font-size:20px}.kpi span{font-size:12px;color:var(--muted)}
+footer{margin-top:40px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body><div class="wrap">
+{% macro sevbadge(f) %}<span class="badge s{{ f.severity }}">{{ f.severity_label }}</span>{% endmacro %}
+{% macro finding(f, show_kw=False) %}
+<div class="card finding s{{ f.severity }}b">
+  <div>{{ sevbadge(f) }} <span class="muted small">{{ f.module_title }}{% if show_kw and f.keyword %} · «{{ f.keyword }}»{% endif %} · трудомісткість: {{ f.effort }}</span>
+  <span class="conf fr">упевненість {{ f.confidence|pct }}<span class="bar"><i style="width:{{ (f.confidence*100)|round }}%"></i></span></span></div>
+  <div class="ftitle">{{ f.title }}</div>
+  <div>{{ f.detail }}</div>
+  {% if f.recommendations %}<ul class="rec">{% for x in f.recommendations %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+  {% if f.evidence.niche_check %}<div class="small muted" style="margin-top:6px">{{ f.evidence.niche_check }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+<h1>SEO-діагноз сторінки</h1>
+<div><a href="{{ r.meta.final_url }}">{{ r.meta.final_url }}</a></div>
+<div class="meta" style="margin-top:8px">
+  <span>Ринок: {{ r.meta.market }}</span><span>Видача: {{ r.meta.provider }}</span>
+  <span>Ембединги: {{ r.meta.embedder }} ({{ {'high':'висока','medium':'середня','low':'низька'}[r.meta.embedder_quality] }} якість)</span>
+  <span>Витрати API: ${{ "%.3f"|format(r.meta.costs_usd.serp + r.meta.costs_usd.backlinks) }}{% if r.meta.serp_searches %} · пошуків SerpApi: {{ r.meta.serp_searches }}{% endif %}</span>
+  <span>{{ r.meta.generated_at }}</span>
+</div>
+{% for w in r.meta.warnings + r.meta.notes %}<div class="card warn small">{{ w }}</div>{% endfor %}
+
+<div class="card small muted">Система вказує на <b>ймовірні причини</b>, а не виносить вердикти: кліки (Navboost), якість сайту (Q*) і спам-сигнали Google
+ззовні не видно. Упевненість показує, наскільки одностайно конкуренти випереджають сторінку за ознакою, з поправкою на розмір вибірки.
+Порядок - каскад: спершу індексація та інтент, потім текст, смисл, посилання.</div>
+
+<h2>Головне, що варто зробити</h2>
+{% for f in r.summary.top_actions %}{{ finding(f, True) }}{% else %}<div class="card">Суттєвих проблем не знайдено.</div>{% endfor %}
+
+{% for k in r.keywords %}
+<h2>Запит «{{ k.keyword }}»</h2>
+<div class="grid">
+  <div class="kpi"><b>{% if k.position %}{{ k.position }}{% elif k.positions_known %}немає в топ-{{ k.serp.organic|length }}{% else %}невідомо{% endif %}</b><span>позиція сторінки{% if not k.positions_known %}: у ручному режимі не визначається{% endif %}</span></div>
+  <div class="kpi"><b>{{ k.modules.intent.dominant_label }}</b><span>у топ-10 переважають ({{ k.modules.intent.dominant_share|pct }}){% if k.modules.intent.directories_in_top10 %} · каталогів: {{ k.modules.intent.directories_in_top10 }}{% endif %}</span></div>
+  <div class="kpi"><b>{{ k.modules.intent.target_type_label }}</b><span>тип вашої сторінки</span></div>
+  <div class="kpi"><b>{{ k.modules.lexical.bm25f_percentile|pct }}</b><span>BM25F: перцентиль серед конкурентів</span></div>
+  <div class="kpi"><b>{{ k.modules.semantic.maxp_percentile|pct }}</b><span>найкращий фрагмент: перцентиль</span></div>
+  {% if k.modules.ai.data_available %}<div class="kpi"><b>{% if k.modules.ai.present %}{% if k.modules.ai.target_cited %}цитує сторінку{% elif k.modules.ai.domain_cited %}цитує сайт{% elif k.modules.ai.verified %}є, без вас{% else %}є, склад не отримано{% endif %}{% else %}немає{% endif %}</b><span>AI Overview</span></div>{% endif %}
+  {% set au = k.modules.authority %}
+  {% if au and au.available %}<div class="kpi"><b>{{ au.target.opr|num }} / {{ au.peers_median_opr|num }}</b><span>Open PageRank: ви / медіана ({{ au.peers_basis }})</span></div>{% endif %}
+  {% set lp = k.modules.local %}
+  {% if lp and lp.data_available %}<div class="kpi"><b>{% if lp.present %}{% if lp.target_in_pack %}ви на {{ lp.target_pack_position }} місці{% else %}є, без вас{% endif %}{% else %}немає{% endif %}</b><span>блок карт</span></div>{% endif %}
+</div>
+{% if lp and lp.present %}<div class="card small">Блок карт: {% for p in lp.places %}<span class="chip">{{ p.position }}. {{ p.title }}{% if p.reviews %} · {{ p.rating }}★ · {{ p.reviews }} відг.{% endif %}</span>{% endfor %}</div>{% endif %}
+
+<h3>Діагноз</h3>
+{% for f in k.findings %}{{ finding(f) }}{% else %}<div class="card">За цим запитом помітних розривів не знайдено.</div>{% endfor %}
+
+<details><summary>Порівняння з конкурентами</summary>
+<div class="card tbl"><table>
+<tr><th>#</th><th>URL</th><th>Тип</th><th>Слів</th><th>BM25F</th><th>Title</th><th>Фрагмент</th><th>Центр топу</th>{% if k.modules.authority and k.modules.authority.available %}<th>OPR домену</th>{% endif %}{% if k.modules.backlinks.available %}<th>Донори стор.</th><th>Донори домену</th>{% endif %}</tr>
+{% for c in k.competitors %}
+<tr class="{{ 'me' if c.is_target else '' }}"><td class="n">{{ c.position or '-' }}</td><td><a href="{{ c.url }}" title="{{ c.title }}">{{ c.url|short(60) }}</a>{% if c.is_target %} · ви{% endif %}</td>
+<td>{{ c.type }}</td><td class="n">{{ c.words|num }}</td><td class="n">{{ c.bm25f|num }}</td><td class="n">{{ c.title_cov|pct }}</td>
+<td class="n">{{ c.maxp|num(3) }}</td><td class="n">{{ c.centroid_sim|num(3) }}</td>{% if k.modules.authority and k.modules.authority.available %}<td class="n">{{ c.opr|num }}</td>{% endif %}{% if k.modules.backlinks.available %}<td class="n">{{ c.page_rd|num }}</td><td class="n">{{ c.domain_rd|num }}</td>{% endif %}</tr>
+{% endfor %}</table>
+{% if k.failed %}<p class="small muted">Не завантажилися: {% for x in k.failed %}{{ x.url|short(50) }} ({{ x.error }}){% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+</div></details>
+
+{% set st = k.modules.semantic.subtopics %}
+{% if st.clusters %}
+<details><summary>Підтеми конкурентів ({{ st.clusters|selectattr('covered')|list|length }} із {{ st.clusters|length }} розкрито)</summary>
+<div class="card tbl"><table><tr><th>Підтема</th><th>У скількох конкурентів</th><th>Розкрита</th><th>Найближчий фрагмент у вас</th></tr>
+{% for c in st.clusters %}<tr><td><b>{{ c.label }}</b>{% if c.examples|length > 1 %}<div class="small muted">{{ c.examples[1:]|join('; ') }}</div>{% endif %}</td>
+<td class="n">{{ c.sources }} ({{ c.source_share|pct }})</td><td class="{{ 'yes' if c.covered else 'no' }}">{{ '✓' if c.covered else '✗' }}</td><td class="small muted">{{ c.target_passage }}</td></tr>{% endfor %}
+</table></div></details>
+{% endif %}
+{% if st.paa %}
+<details><summary>Блок «Схожі запитання» (PAA)</summary>
+<div class="card tbl"><table><tr><th>Запитання</th><th>Відповідь на сторінці</th></tr>
+{% for q in st.paa %}<tr><td>{{ q.question }}</td><td class="{{ 'yes' if q.covered else 'no' }}">{{ '✓' if q.covered else '✗' }}</td></tr>{% endfor %}
+</table></div></details>
+{% endif %}
+{% set tg = k.modules.lexical.term_gaps %}
+{% if tg.missing %}
+<details><summary>Терміни конкурентів, яких немає на сторінці</summary>
+<div class="card">{% for t in tg.missing[:40] %}<span class="chip" title="у {{ t.df }} із {{ tg.n }} конкурентів">{{ t.term }} · {{ t.df }}/{{ tg.n }}</span>{% endfor %}
+{% if tg.underused %}<h3>Є, але рідко</h3>{% for t in tg.underused %}<span class="chip">{{ t.term }} · {{ t.target_per_1000 }} vs {{ t.median_per_1000 }} на 1000 слів</span>{% endfor %}{% endif %}
+<p class="small muted">Цифра - у скількох конкурентів є термін. Бренди й навігацію конкурентів ігноруйте.</p></div></details>
+{% endif %}
+{% if k.own_urls_in_serp %}<div class="card small">Ваш сайт у видачі за цим запитом: {% for it in k.own_urls_in_serp %}<a href="{{ it.url }}">{{ it.url|short(60) }}</a> ({{ it.position }}){% if not loop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+{% endfor %}
+
+<h2>Сайт</h2>
+{% set it = r.site.internal %}
+{% if it and it.target %}
+<div class="grid">
+  <div class="kpi"><b>{{ it.target.depth if it.target.depth is not none else '∞' }}</b><span>кліків від головної</span></div>
+  <div class="kpi"><b>{{ it.target.pr_percentile|pct }}</b><span>внутрішній PageRank (перцентиль)</span></div>
+  <div class="kpi"><b>{{ it.target.prominence_percentile|pct }}</b><span>близькість до головної (проксі onsiteProminence)</span></div>
+  <div class="kpi"><b>{{ it.target.inlinks_pages }}</b><span>сторінок посилаються · з тексту: {{ it.target.inlinks_contextual_pages }}</span></div>
+  <div class="kpi"><b>{{ it.pages }}</b><span>сторінок у графі{% if it.truncated %} (обхід обмежено){% endif %}</span></div>
+</div>
+{% if it.whatif %}<div class="card">Якщо поставити контекстні посилання з {{ it.whatif.added_links_from|length }} сторінок зі списку нижче,
+внутрішній PageRank сторінки зросте з перцентиля <b>{{ it.whatif.pr_percentile_before|pct }}</b> до <b>{{ it.whatif.pr_percentile_after|pct }}</b>,
+близькість до головної - з {{ it.whatif.prominence_percentile_before|pct }} до {{ it.whatif.prominence_percentile_after|pct }} (моделювання на графі сайту).</div>{% endif %}
+{% for kw, rows in it.link_suggestions.items() %}{% if rows %}
+<details><summary>Звідки поставити посилання на сторінку: «{{ kw }}»</summary>
+<div class="card tbl"><table><tr><th>Сторінка-донор</th><th>Близькість до головної</th><th>Тематична близькість</th><th>Анкор</th></tr>
+{% for s in rows %}<tr><td><a href="{{ s.url }}" title="{{ s.title }}">{{ s.url|short(60) }}</a></td><td class="n">{{ s.prominence_pct|pct }}</td><td class="n">{{ s.relevance_pct|pct }}</td><td>{{ s.suggested_anchor }}</td></tr>{% endfor %}
+</table></div></details>{% endif %}{% endfor %}
+{% if it.target.anchors %}<div class="card small">Анкори внутрішніх посилань на сторінку: {% for a, c in it.target.anchors %}<span class="chip">{{ a }} ×{{ c }}</span>{% endfor %}</div>{% endif %}
+{% endif %}
+{% for f in r.site.findings %}{{ finding(f) }}{% endfor %}
+
+{% set tm = r.site.technical %}
+<details><summary>Технічне зведення</summary>
+<div class="card tbl"><table>
+<tr><td>HTTP-статус</td><td>{{ tm.status }}</td></tr>
+<tr><td>Googlebot дозволено в robots.txt</td><td class="{{ 'yes' if tm.googlebot_allowed else 'no' }}">{{ 'так' if tm.googlebot_allowed else 'ні' }}</td></tr>
+<tr><td>noindex</td><td class="{{ 'no' if tm.noindex else 'yes' }}">{{ 'так' if tm.noindex else 'ні' }}</td></tr>
+<tr><td>Canonical</td><td>{{ tm.canonical or '-' }}{% if not tm.canonical_self %} <span class="no">(інший URL)</span>{% endif %}</td></tr>
+<tr><td>Title ({{ tm.title_len }} симв.)</td><td>{{ tm.title }}</td></tr>
+<tr><td>H1</td><td>{{ tm.h1|join(' | ') or '-' }}</td></tr>
+<tr><td>Мова (lang / за текстом)</td><td>{{ tm.html_lang or '-' }} / {{ tm.detected_lang or '-' }}</td></tr>
+<tr><td>Слів основного тексту</td><td>{{ tm.word_count }}</td></tr>
+<tr><td>schema.org</td><td>{{ tm.schema_types|join(', ') or '-' }}</td></tr>
+<tr><td>Відповідь сервера</td><td>{{ tm.response_ms }} мс, {{ tm.size_kb }} КБ</td></tr>
+</table></div></details>
+
+<h2>Чого система не бачить</h2>
+<div class="card tbl"><table><tr><th>Сигнал</th><th>Чому важливий</th><th>Чим замінюємо</th><th>Надійність</th></tr>
+{% for u in r.unobservable %}<tr><td>{{ u.signal }}</td><td>{{ u.why }}</td><td>{{ u.proxy }}</td><td>{{ u.reliability }}</td></tr>{% endfor %}
+</table></div>
+
+<footer>seo-analyzer {{ r.meta.version }}. Дані про посилання - DataForSEO, не Google. Типи сторінок визначено евристиками.
+Модулі спираються на посібник Google із систем ранжування, матеріали справи U.S. v. Google і витік Content Warehouse API (2024).</footer>
+</div></body></html>
