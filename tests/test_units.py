@@ -127,7 +127,7 @@ def test_specificity_filters_generic_words_any_market():
         assert specificity(word, lang) > cut, word
 
 
-# --- PageRank: пример из отчёта -----------------------------------------------
+# --- PageRank: контрольный пример ----------------------------------------------
 
 def test_pagerank_report_example():
     G = nx.DiGraph([("A", "B"), ("A", "C"), ("B", "C"), ("C", "A")])

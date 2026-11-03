@@ -1,7 +1,8 @@
 """Провайдеры выдачи: DataForSEO, Serper.dev и ручной список конкурентов.
 
 Слой абстракции нужен потому, что поставщики SERP-данных нестабильны
-(закрытие Custom Search API 01.01.2027, отказ Google от num=100, иск к SerpApi).
+(Google закрывает Custom Search JSON API с 01.01.2027, не поддерживает параметр num=100
+и судится с SerpApi).
 """
 
 from __future__ import annotations

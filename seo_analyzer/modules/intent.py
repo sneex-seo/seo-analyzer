@@ -53,8 +53,8 @@ DIRECTORIES = (
     "techbehemoths.com", "superbcompanies.com", "rankwatch.com", "bestseocompanies.", "seoagencies.",
     "builtin.com", "builtintoronto.com", "builtinvancouver.", "builtin", "linkedin.com/company",
 )
-# Рейтинги - во множественном числе: «Top 10 SEO Companies», «Best SEO Agencies in Toronto», «15 best SEO firms».
-# Единственное число («Best SEO Agency in Toronto») - самоописание агентства, а не каталог.
+# Рейтинги - во множественном числе: «Top 10 SEO Companies», «Best SEO Agencies in Kyiv», «15 best SEO firms».
+# Единственное число («Best SEO Agency in Kyiv») - самоописание агентства, а не каталог.
 _PLURAL = r"(companies|agencies|firms|providers|consultants|experts|specialists|freelancers)"
 _LISTICLE = re.compile(rf"\b(top|best)\s+(\d{{1,3}}\s+)?([\w&-]+\s+){{0,3}}{_PLURAL}\b", re.I)
 _LISTICLE_NOUNS = re.compile(r"\b(compan|agenc|firm|provider|consultant|expert|service|specialist|freelancer)", re.I)
